@@ -5,7 +5,7 @@ import random
 import card
 import scorer
 
-CARD_FORMAT_MSG = "Card format is [dhsc][1-10,jqka]"
+CARD_FORMAT_MSG = "Card format is [shdc][1-10,jqka]"
 CARDS_IN_HAND = 2
 CARDS_IN_RIVER = 5
 
