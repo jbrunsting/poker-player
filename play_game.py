@@ -1,34 +1,13 @@
 #!/usr/bin/python3
 
 import random
+
+import card
 import scorer
 
+CARD_FORMAT_MSG = "Card format is [dhsc][1-13]"
 CARDS_IN_HAND = 2
 CARDS_IN_RIVER = 5
-NUM_SUITS = 4
-CARD_FORMAT_MSG = "Card format is [dhsc][1-13]"
-SUIT_INDICES = "dhsc"
-MIN_CARD = 1
-MAX_CARD = 13
-
-
-class Card:
-    def __init__(self, suit, val):
-        self.suit = suit
-        self.val = val
-
-    def __str__(self):
-        return SUIT_INDICES[self.suit] + str(self.val)
-
-    def __eq__(self, other):
-        return self.suit == other.suit and self.val == other.val
-
-    def __lt__(self, other):
-        if self.val < other.val:
-            return True
-        if self.val > other.val:
-            return False
-        return self.suit < other.suit
 
 
 def print_cards(cards):
@@ -41,9 +20,9 @@ def cards_diff(cards, to_remove):
 
 def get_deck():
     deck = []
-    for s in range(len(SUIT_INDICES)):
-        for i in range(MIN_CARD, MAX_CARD + 1):
-            deck.append(Card(s, i))
+    for s in range(len(card.SUIT_INDICES)):
+        for i in range(card.MIN_CARD, card.MAX_CARD + 1):
+            deck.append(card.Card(s, i))
     return deck
 
 
@@ -51,12 +30,12 @@ def card_input():
     suit = -1
     print_fmt = False
     while True:
-        card = input("> ")
-        if len(card) == 2 or len(card) == 3 and card[0] in SUIT_INDICES:
-            suit = SUIT_INDICES.find(card[0])
-            card = int(card[1:])
-            if MIN_CARD <= card and card <= MAX_CARD:
-                return Card(suit, card)
+        c = input("> ")
+        if len(c) == 2 or len(c) == 3 and c[0] in card.SUIT_INDICES:
+            suit = card.SUIT_INDICES.find(c[0])
+            c = int(c[1:])
+            if card.MIN_CARD <= c and c <= card.MAX_CARD:
+                return card.Card(suit, c)
         print(CARD_FORMAT_MSG)
 
 

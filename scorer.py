@@ -1,9 +1,11 @@
 import enum
 
+import card
+
 CARDS_TO_USE = 5
 
 
-class HandType(enum.IntEnum): # Must be ordered by priority descending
+class HandType(enum.IntEnum):  # Must be ordered by priority descending
     ROYAL_FLUSH = 10
     STRAIGHT_FLUSH = 9
     FOUR_KIND = 8
