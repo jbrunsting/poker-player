@@ -5,7 +5,7 @@ import random
 import card
 import scorer
 
-CARD_FORMAT_MSG = "Card format is [dhsc][1-13]"
+CARD_FORMAT_MSG = "Card format is [dhsc][1-10,jqka]"
 CARDS_IN_HAND = 2
 CARDS_IN_RIVER = 5
 
@@ -31,10 +31,24 @@ def card_input():
     print_fmt = False
     while True:
         c = input("> ")
-        if len(c) == 2 or len(c) == 3 and c[0] in card.SUIT_INDICES:
-            suit = card.SUIT_INDICES.find(c[0])
-            c = int(c[1:])
-            if card.MIN_CARD <= c and c <= card.MAX_CARD:
+        if len(c) == 2 or len(c) == 3 and c[-1] in card.SUIT_INDICES:
+            suit = card.SUIT_INDICES.find(c[-1])
+            if c[:-1] == "j":
+                c = 11
+            elif c[:-1] == "q":
+                c = 12
+            elif c[:-1] == "k":
+                c = 13
+            elif c[:-1] == "a":
+                c = 14
+            else:
+                try:
+                    c = int(c[:-1])
+                except ValueError:
+                    c = -1
+            if 0 <= suit and suit < len(
+                    card.SUIT_INDICES
+            ) and card.MIN_CARD <= c and c <= card.MAX_CARD:
                 return card.Card(suit, c)
         print(CARD_FORMAT_MSG)
 
@@ -72,10 +86,23 @@ def simulate_game(players, hand):
         print("You lose!")
     else:
         print("Something broke!")
+    testscore = scorer.score([
+        card.Card(0, 9),
+        card.Card(1, 10),
+        card.Card(3, 10),
+        card.Card(0, 12),
+        card.Card(0, 13),
+        card.Card(1, 9),
+        card.Card(0, 10),
+    ])
+    print("Test score is {}".format(testscore))
 
 
 while True:
-    players = int(input("Number of players: "))
-    print("Enter your hand: ")
-    hand = [card_input() for i in range(CARDS_IN_HAND)]
-    simulate_game(players, hand)
+    try:
+        players = int(input("Number of players: "))
+        print("Enter your hand: ")
+        hand = [card_input() for i in range(CARDS_IN_HAND)]
+        simulate_game(players, hand)
+    except ValueError:
+        pass

@@ -1,6 +1,6 @@
 SUIT_INDICES = "dhsc"
-MIN_CARD = 1
-MAX_CARD = 13
+MIN_CARD = 2
+MAX_CARD = 14
 NUM_SUITS = 4
 
 
@@ -10,7 +10,7 @@ class Card:
         self.val = val
 
     def __str__(self):
-        return SUIT_INDICES[self.suit] + str(self.val)
+        return str(self.val) + SUIT_INDICES[self.suit]
 
     def __eq__(self, other):
         return self.suit == other.suit and self.val == other.val
