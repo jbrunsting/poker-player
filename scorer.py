@@ -77,7 +77,6 @@ class Score:
             return self.hand_type < other.hand_type
 
         # Tiebreaker
-
         self_ace_hi = True
         other_ace_hi = True
         # Ace is low iff we have a straight with the ace at the bottom (no
@@ -92,9 +91,14 @@ class Score:
         if hand_tiebreaker is not None:
             return hand_tiebreaker
 
-        # This is technically wrong because you should only use 5 cards for
-        # the tiebreaker but I think it is OK
-        return tiebreaker_lt(self.cards, False, other.cards, False)
+        hand_size = len(self.hand_cards)
+        if hand_size == 5:
+            return False
+
+        self.cards.sort()
+        other.cards.sort()
+        return not not tiebreaker_lt(self.cards[-(5 - hand_size):], False,
+                                     other.cards, False)
 
 
 def find_n_kind(cards, n):
