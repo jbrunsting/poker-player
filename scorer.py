@@ -32,6 +32,30 @@ HAND_NAMES = {
 }
 
 
+def tiebreaker_lt(cards_a, a_ace_hi, cards_b, b_ace_hi):
+    cards = [cards_a, cards_b]
+    ace_hi = [a_ace_hi, b_ace_hi]
+    rankings = [[c.val for c in cs] for cs in cards]
+    for i in range(len(rankings)):
+        if not ace_hi[i]:
+            rankings[i] = [1 if r == 14 else r for r in rankings[i]]
+        rankings[i] = list(set(rankings[i]))
+        rankings[i].sort()
+
+    for i in reversed(range(min([len(r) for r in rankings]))):
+        if rankings[0][i] < rankings[1][i]:
+            return True
+        elif rankings[0][i] > rankings[1][i]:
+            return False
+
+    if len(rankings[0]) < len(rankings[1]):
+        return True
+    elif len(rankings[0]) > len(rankings[1]):
+        return False
+
+    return None
+
+
 class Score:
     def __init__(self, hand_type, hand_cards, cards):
         self.hand_type = hand_type
@@ -51,8 +75,26 @@ class Score:
     def __lt__(self, other):
         if self.hand_type != other.hand_type:
             return self.hand_type < other.hand_type
-        # TODO: Proper tiebreaker
-        return max(self.cards).val < max(other.cards).val
+
+        # Tiebreaker
+
+        self_ace_hi = True
+        other_ace_hi = True
+        # Ace is low iff we have a straight with the ace at the bottom (no
+        # king in the straight)
+        if self.hand_type == HandType.STRAIGHT and 13 not in self.hand_cards:
+            self_ace_hi = False
+        if other.hand_type == HandType.STRAIGHT and 13 not in other.hand_cards:
+            other_ace_hi = False
+
+        hand_tiebreaker = tiebreaker_lt(self.hand_cards, self_ace_hi,
+                                        other.hand_cards, other_ace_hi)
+        if hand_tiebreaker is not None:
+            return hand_tiebreaker
+
+        # This is technically wrong because you should only use 5 cards for
+        # the tiebreaker but I think it is OK
+        return tiebreaker_lt(self.cards, False, other.cards, False)
 
 
 def find_n_kind(cards, n):
