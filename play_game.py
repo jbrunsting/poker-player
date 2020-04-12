@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import random
+import scorer
 
 CARDS_IN_HAND = 2
 CARDS_IN_RIVER = 5
@@ -12,22 +13,22 @@ MAX_CARD = 13
 
 
 class Card:
-    def __init__(self, suit, card):
+    def __init__(self, suit, val):
         self.suit = suit
-        self.card = card
+        self.val = val
 
     def __str__(self):
-        return SUIT_INDICES[self.suit] + str(self.card)
+        return SUIT_INDICES[self.suit] + str(self.val)
 
     def __eq__(self, other):
-        return self.suit == other.suit and self.card == other.card
+        return self.suit == other.suit and self.val == other.val
 
     def __lt__(self, other):
-        if self.suit < other.suit:
+        if self.val < other.val:
             return True
-        if self.suit > other.suit:
+        if self.val > other.val:
             return False
-        return self.card < other.card
+        return self.suit < other.suit
 
 
 def print_cards(cards):
@@ -79,6 +80,19 @@ def simulate_game(players, hand):
     print_cards(river)
     print("Players:")
     [print_cards(h) for h in player_hands]
+
+    score1 = scorer.score(hand + river)
+    score2 = scorer.score(player_hands[0] + river)
+    print("Your score is {}".format(score1))
+    print("Player 1 score is {}".format(score2))
+    if score1 == score2:
+        print("Tie!")
+    elif score1 < score2:
+        print("You win")
+    elif score1 > score2:
+        print("You lose!")
+    else:
+        print("Something broke!")
 
 
 while True:
