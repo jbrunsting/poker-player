@@ -52,9 +52,9 @@ def card_input():
     print_fmt = False
     while True:
         card = input("> ")
-        if len(card) == 2 and card[0] in SUIT_INDICES:
+        if len(card) == 2 or len(card) == 3 and card[0] in SUIT_INDICES:
             suit = SUIT_INDICES.find(card[0])
-            card = int(card[1])
+            card = int(card[1:])
             if MIN_CARD <= card and card <= MAX_CARD:
                 return Card(suit, card)
         print(CARD_FORMAT_MSG)
@@ -87,9 +87,9 @@ def simulate_game(players, hand):
     print("Player 1 score is {}".format(score2))
     if score1 == score2:
         print("Tie!")
-    elif score1 < score2:
-        print("You win")
     elif score1 > score2:
+        print("You win")
+    elif score1 < score2:
         print("You lose!")
     else:
         print("Something broke!")
