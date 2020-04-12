@@ -10,8 +10,8 @@ CARDS_IN_HAND = 2
 CARDS_IN_RIVER = 5
 
 
-def print_cards(cards):
-    print([str(c) for c in cards])
+def card_str(cards):
+    return " ".join([str(c) for c in cards])
 
 
 def cards_diff(cards, to_remove):
@@ -54,48 +54,35 @@ def card_input():
 
 
 def simulate_game(players, hand):
-    print_cards(hand)
+    print("Hand: {}".format(card_str(hand)))
 
-    deck = get_deck()
-
-    print_cards(deck)
-
-    deck = cards_diff(deck, hand)
+    deck = cards_diff(get_deck(), hand)
     random.shuffle(deck)
-
-    print_cards(deck)
 
     river = [deck.pop() for i in range(CARDS_IN_RIVER)]
     player_hands = [[deck.pop() for i in range(CARDS_IN_HAND)]
                     for i in range(players)]
 
-    print("River:")
-    print_cards(river)
-    print("Players:")
-    [print_cards(h) for h in player_hands]
+    print("River: {}".format(card_str(river)))
+    print("Players: [{} ]".format(" , ".join(
+        [card_str(h) for h in player_hands])))
 
-    score1 = scorer.score(hand + river)
-    score2 = scorer.score(player_hands[0] + river)
-    print("Your score is {}".format(score1))
-    print("Player 1 score is {}".format(score2))
-    if score1 == score2:
+    your_score = scorer.score(hand + river)
+    player_scores = [scorer.score(hand + river) for hand in player_hands]
+
+    print("Your score is {}".format(your_score))
+    for i, score in enumerate(player_scores):
+        print("Player {} score is {}".format(i + 1, score))
+
+    max_player = max(player_scores)
+    if your_score == max_player:
         print("Tie!")
-    elif score1 > score2:
+    elif your_score > max_player:
         print("You win")
-    elif score1 < score2:
+    elif your_score < max_player:
         print("You lose!")
     else:
         print("Something broke!")
-    testscore = scorer.score([
-        card.Card(0, 9),
-        card.Card(1, 10),
-        card.Card(3, 10),
-        card.Card(0, 12),
-        card.Card(0, 13),
-        card.Card(1, 9),
-        card.Card(0, 10),
-    ])
-    print("Test score is {}".format(testscore))
 
 
 while True:

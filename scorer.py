@@ -39,9 +39,11 @@ class Score:
         self.cards = cards
 
     def __str__(self):
-        return "{ hand=" + HAND_NAMES[self.hand_type] + " hand_cards=" + str([
-            str(c) for c in self.hand_cards
-        ]) + " cards=" + str([str(c) for c in self.cards]) + " }"
+        return "{ hand=" + HAND_NAMES[self.
+                                      hand_type] + " hand_cards=" + " ".join([
+                                          str(c) for c in self.hand_cards
+                                      ]) + " cards=" + " ".join(
+                                          [str(c) for c in self.cards]) + " }"
 
     def __eq__(self, other):
         return not self < other and not self > other
