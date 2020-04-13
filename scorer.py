@@ -183,31 +183,38 @@ def find_hand(cards, hand):
         return [max(cards)]
 
 
+# Returns a score object if the hand can be formed, none otherwise
+def try_hand(cards, hand):
+    h = find_hand(cards, hand)
+    if h is not None:
+        return Score(hand, h, cards)
+
+
 def score(cards):
     cards.sort()
     assert len(cards) >= CARDS_TO_USE, "Must have {} cards to score".format(
         CARDS_TO_USE)
 
-    flush = find_hand(cards, HandType.FLUSH)
+    flush = try_hand(cards, HandType.FLUSH)
     if flush is not None:
-        s_flush = find_hand(cards, HandType.STRAIGHT_FLUSH)
+        s_flush = try_hand(cards, HandType.STRAIGHT_FLUSH)
         if s_flush is not None:
-            r_flush = find_hand(cards, HandType.ROYAL_FLUSH)
+            r_flush = try_hand(cards, HandType.ROYAL_FLUSH)
             if r_flush is not None:
                 return r_flush
             return s_flush
 
-    straight = find_hand(cards, HandType.STRAIGHT)
-    pair = find_hand(cards, HandType.PAIR)
+    straight = try_hand(cards, HandType.STRAIGHT)
+    pair = try_hand(cards, HandType.PAIR)
     full_house = None
     three_kind = None
     if pair is not None:
-        three_kind = find_hand(cards, HandType.THREE_KIND)
+        three_kind = try_hand(cards, HandType.THREE_KIND)
         if three_kind is not None:
-            four_kind = find_hand(cards, HandType.FOUR_KIND)
+            four_kind = try_hand(cards, HandType.FOUR_KIND)
             if four_kind is not None:
                 return four_kind
-            full_house = find_hand(cards, HandType.FULL_HOUSE)
+            full_house = try_hand(cards, HandType.FULL_HOUSE)
 
     if full_house is not None:
         return full_house
@@ -219,12 +226,12 @@ def score(cards):
         return three_kind
 
     if pair is not None:
-        two_pair = find_hand(cards, HandType.TWO_PAIR)
+        two_pair = try_hand(cards, HandType.TWO_PAIR)
         if two_pair is not None:
             return two_pair
         return pair
 
-    high_card = find_hand(cards, HandType.HIGH_CARD)
+    high_card = try_hand(cards, HandType.HIGH_CARD)
     if high_card is not None:
         return high_card
 
