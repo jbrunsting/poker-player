@@ -38,11 +38,16 @@ class Deck:
                         break
                 if not exclude:
                     self.deck.append(card.Card(s, i))
+        self.len = len(self.deck)
+
+    def reset(self):
+        self.len = len(self.deck)
 
     def pop(self):
-        i = random.randint(0, len(self.deck) - 1)
+        i = random.randint(0, self.len - 1)
         self.deck[i], self.deck[-1] = self.deck[-1], self.deck[i]
-        return self.deck.pop()
+        self.len -= 1
+        return self.deck[self.len]
 
 
 def card_input():
@@ -94,8 +99,10 @@ while True:
         print("Enter your hand: ")
         hand = [card_input() for i in range(CARDS_IN_HAND)]
         counts = {g: 0 for g in GameOutcome}
+        deck = Deck(hand)
         for i in range(NUM_ITERS):
-            counts[simulate_game(players, Deck(hand), hand)] += 1
+            deck.reset()
+            counts[simulate_game(players, deck, hand)] += 1
         percentages = {g: c / NUM_ITERS for g, c in counts.items()}
         o_strings = {
             GameOutcome.TIE: "tie",
