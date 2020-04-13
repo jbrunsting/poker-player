@@ -2,6 +2,7 @@
 
 import enum
 import random
+from multiprocessing import Manager, Process
 
 import card
 import scorer
@@ -9,7 +10,8 @@ import scorer
 CARD_FORMAT_MSG = "Card format is [shdc][1-10,jqka]"
 CARDS_IN_HAND = 2
 CARDS_IN_RIVER = 5
-NUM_ITERS = 10000
+NUM_ITERS = 25000
+NUM_THREADS = 10
 
 
 class GameOutcome(enum.IntEnum):
@@ -93,16 +95,39 @@ def simulate_game(players, deck, hand):
     return GameOutcome.TIE
 
 
+def simulate_games(players, hand, num_games, results_map):
+    deck = Deck(hand)
+    for i in range(num_games):
+        deck.reset()
+        results_map[simulate_game(players, deck, hand)] += 1
+
+
 while True:
     try:
         players = int(input("Number of players: "))
         print("Enter your hand: ")
         hand = [card_input() for i in range(CARDS_IN_HAND)]
         counts = {g: 0 for g in GameOutcome}
-        deck = Deck(hand)
-        for i in range(NUM_ITERS):
-            deck.reset()
-            counts[simulate_game(players, deck, hand)] += 1
+
+        manager = Manager()
+        thread_counts = [manager.dict() for i in range(NUM_THREADS)]
+        for i in range(NUM_THREADS):
+            for g in GameOutcome:
+                thread_counts[i][g] = 0
+
+        threads = []
+        for i in range(NUM_THREADS):
+            p = Process(
+                target=simulate_games,
+                args=(players, hand, int(NUM_ITERS / NUM_THREADS),
+                      thread_counts[i]))
+            threads.append(p)
+            p.start()
+        for i in range(NUM_THREADS):
+            p.join()
+
+        counts = {g: sum(cs[g] for cs in thread_counts) for g in GameOutcome}
+
         percentages = {g: c / NUM_ITERS for g, c in counts.items()}
         o_strings = {
             GameOutcome.TIE: "tie",
