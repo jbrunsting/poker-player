@@ -199,6 +199,8 @@ def score(cards):
 
     straight = find_hand(cards, HandType.STRAIGHT)
     pair = find_hand(cards, HandType.PAIR)
+    full_house = None
+    three_kind = None
     if pair is not None:
         three_kind = find_hand(cards, HandType.THREE_KIND)
         if three_kind is not None:
@@ -206,22 +208,21 @@ def score(cards):
             if four_kind is not None:
                 return four_kind
             full_house = find_hand(cards, HandType.FULL_HOUSE)
-            if full_house is not None:
-                return full_house
-            if flush is not None:
-                return flush
-            if straight is not None:
-                return straight
-            return three_kind
+
+    if full_house is not None:
+        return full_house
+    if flush is not None:
+        return flush
+    if straight is not None:
+        return straight
+    if three_kind is not None:
+        return three_kind
+
+    if pair is not None:
         two_pair = find_hand(cards, HandType.TWO_PAIR)
         if two_pair is not None:
             return two_pair
         return pair
-    else:
-        if flush is not None:
-            return flush
-        if straight is not None:
-            return straight
 
     high_card = find_hand(cards, HandType.HIGH_CARD)
     if high_card is not None:
