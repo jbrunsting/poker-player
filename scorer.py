@@ -39,10 +39,9 @@ def tiebreaker_lt(cards_a, a_ace_hi, cards_b, b_ace_hi):
     for i in range(len(rankings)):
         if not ace_hi[i]:
             rankings[i] = [1 if r == 14 else r for r in rankings[i]]
-        rankings[i] = list(set(rankings[i]))
-        rankings[i].sort()
+        rankings[i].sort(reverse=True)
 
-    for i in reversed(range(min([len(r) for r in rankings]))):
+    for i in range(min([len(r) for r in rankings])):
         if rankings[0][i] < rankings[1][i]:
             return True
         elif rankings[0][i] > rankings[1][i]:
@@ -62,6 +61,9 @@ class Score:
         self.hand_cards = hand_cards
         self.cards = cards
         self.cards.sort()
+        self.non_hand_cards = [
+            c for c in self.cards if c not in self.hand_cards
+        ]
 
     def __str__(self):
         return "{ hand=" + HAND_NAMES[self.
@@ -97,8 +99,8 @@ class Score:
         if hand_size == 5:
             return False
 
-        return not not tiebreaker_lt(self.cards[-(5 - hand_size):], False,
-                                     other.cards, False)
+        return not not tiebreaker_lt(self.non_hand_cards[-(5 - hand_size):],
+                                     False, other.cards, False)
 
 
 def find_n_kind(cards, n):
