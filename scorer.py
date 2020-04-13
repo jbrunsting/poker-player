@@ -61,6 +61,7 @@ class Score:
         self.hand_type = hand_type
         self.hand_cards = hand_cards
         self.cards = cards
+        self.cards.sort()
 
     def __str__(self):
         return "{ hand=" + HAND_NAMES[self.
@@ -81,9 +82,10 @@ class Score:
         other_ace_hi = True
         # Ace is low iff we have a straight with the ace at the bottom (no
         # king in the straight)
-        if self.hand_type == HandType.STRAIGHT and 13 not in self.hand_cards:
+        hand_vals = [c.val for c in self.hand_cards]
+        if self.hand_type == HandType.STRAIGHT and 13 not in hand_vals:
             self_ace_hi = False
-        if other.hand_type == HandType.STRAIGHT and 13 not in other.hand_cards:
+        if other.hand_type == HandType.STRAIGHT and 13 not in hand_vals:
             other_ace_hi = False
 
         hand_tiebreaker = tiebreaker_lt(self.hand_cards, self_ace_hi,
@@ -95,8 +97,6 @@ class Score:
         if hand_size == 5:
             return False
 
-        self.cards.sort()
-        other.cards.sort()
         return not not tiebreaker_lt(self.cards[-(5 - hand_size):], False,
                                      other.cards, False)
 
@@ -163,7 +163,7 @@ def find_hand(cards, hand):
             if num_sequential == 5:
                 return cards[i:i + 5]
         if num_sequential == 4 and cards[0].val == 2 and cards[-1].val == 14:
-            return [14] + cards[0:4]
+            return [card.Card(cards[-1].suit, 14)] + cards[0:4]
         return None
     elif hand == HandType.THREE_KIND:
         return find_n_kind(cards, 3)

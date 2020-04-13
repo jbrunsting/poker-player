@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import enum
 import random
 
 import card
@@ -8,6 +9,13 @@ import scorer
 CARD_FORMAT_MSG = "Card format is [shdc][1-10,jqka]"
 CARDS_IN_HAND = 2
 CARDS_IN_RIVER = 5
+NUM_ITERS = 1000
+
+
+class GameOutcome(enum.IntEnum):
+    TIE = 1
+    WIN = 2
+    LOSS = 3
 
 
 def card_str(cards):
@@ -54,35 +62,22 @@ def card_input():
 
 
 def simulate_game(players, hand):
-    print("Hand: {}".format(card_str(hand)))
-
     deck = cards_diff(get_deck(), hand)
     random.shuffle(deck)
 
     river = [deck.pop() for i in range(CARDS_IN_RIVER)]
     player_hands = [[deck.pop() for i in range(CARDS_IN_HAND)]
-                    for i in range(players)]
-
-    print("River: {}".format(card_str(river)))
-    print("Players: [{} ]".format(" , ".join(
-        [card_str(h) for h in player_hands])))
+                    for i in range(players - 1)]
 
     your_score = scorer.score(hand + river)
     player_scores = [scorer.score(hand + river) for hand in player_hands]
 
-    print("Your score is {}".format(your_score))
-    for i, score in enumerate(player_scores):
-        print("Player {} score is {}".format(i + 1, score))
-
     max_player = max(player_scores)
-    if your_score == max_player:
-        print("Tie!")
+    if your_score < max_player:
+        return GameOutcome.LOSS
     elif your_score > max_player:
-        print("You win")
-    elif your_score < max_player:
-        print("You lose!")
-    else:
-        print("Something broke!")
+        return GameOutcome.WIN
+    return GameOutcome.TIE
 
 
 while True:
@@ -90,6 +85,17 @@ while True:
         players = int(input("Number of players: "))
         print("Enter your hand: ")
         hand = [card_input() for i in range(CARDS_IN_HAND)]
-        simulate_game(players, hand)
+        counts = {g: 0 for g in GameOutcome}
+        for i in range(NUM_ITERS):
+            counts[simulate_game(players, hand)] += 1
+        percentages = {g: c / NUM_ITERS for g, c in counts.items()}
+        o_strings = {
+            GameOutcome.TIE: "tie",
+            GameOutcome.WIN: "win",
+            GameOutcome.LOSS: "loss"
+        }
+        percentage_strings = {o_strings[o]: c for o, c in percentages.items()}
+        print("Outcomes for hand {}  are {}".format(" ".join(
+            [str(c) for c in hand]), percentage_strings))
     except ValueError:
         pass
