@@ -118,7 +118,9 @@ def find_n_kind(cards, n):
 # Returns the cards making up the hand, or None of the hand does not exist
 # CARDS MUST BE SORTED
 def find_hand(cards, hand):
-    assert cards[0].val <= cards[1].val and cards[-2].val <= cards[-1].val, "Cards passed to find_hand must be sorted"
+    assert len(cards) <= 1 or (cards[0].val <= cards[1].val
+                               and cards[-2].val <= cards[-1].val
+                               ), "Cards passed to find_hand must be sorted"
 
     if hand == HandType.ROYAL_FLUSH:
         # We have a royal flush iff we have a straight flush with only cards
@@ -192,49 +194,56 @@ def try_hand(cards, hand):
         return Score(hand, h, cards)
 
 
+class EvalNode:
+    def __init__(self, hand):
+        self.hand = hand
+        self.children = []
+        self.best_branch_hand = None
+
+
+eval_nodes = {h: EvalNode(h) for h in HandType}
+eval_root = eval_nodes[HandType.HIGH_CARD]
+
+
+def _link(ph, ch):
+    eval_nodes[ph].children.append(eval_nodes[ch])
+
+
+def best_branch_hand(eval_node):
+    return max(
+        [eval_node.hand] + [best_branch_hand(c) for c in eval_node.children])
+
+
+_link(HandType.HIGH_CARD, HandType.FLUSH)
+_link(HandType.FLUSH, HandType.STRAIGHT_FLUSH)
+_link(HandType.STRAIGHT_FLUSH, HandType.ROYAL_FLUSH)
+_link(HandType.HIGH_CARD, HandType.PAIR)
+_link(HandType.PAIR, HandType.THREE_KIND)
+_link(HandType.THREE_KIND, HandType.FOUR_KIND)
+_link(HandType.THREE_KIND, HandType.FULL_HOUSE)
+_link(HandType.PAIR, HandType.TWO_PAIR)
+_link(HandType.HIGH_CARD, HandType.STRAIGHT)
+
+for h in HandType:
+    eval_nodes[h].best_branch_hand = best_branch_hand(eval_nodes[h])
+
+
 def score(cards):
     cards.sort()
     assert len(cards) >= CARDS_TO_USE, "Must have {} cards to score".format(
         CARDS_TO_USE)
 
-    flush = try_hand(cards, HandType.FLUSH)
-    if flush is not None:
-        s_flush = try_hand(cards, HandType.STRAIGHT_FLUSH)
-        if s_flush is not None:
-            r_flush = try_hand(cards, HandType.ROYAL_FLUSH)
-            if r_flush is not None:
-                return r_flush
-            return s_flush
+    to_expand = [eval_root]
+    best_score = None
+    while to_expand:
+        cur = to_expand.pop()
+        if best_score is None or cur.best_branch_hand > best_score.hand_type:
+            to_expand.extend(cur.children)
+            hand_cards = find_hand(cards, cur.hand)
+            if hand_cards is not None and (best_score is None
+                                           or cur.hand > best_score.hand_type):
+                best_score = Score(cur.hand, hand_cards, cards)
 
-    straight = try_hand(cards, HandType.STRAIGHT)
-    pair = try_hand(cards, HandType.PAIR)
-    full_house = None
-    three_kind = None
-    if pair is not None:
-        three_kind = try_hand(cards, HandType.THREE_KIND)
-        if three_kind is not None:
-            four_kind = try_hand(cards, HandType.FOUR_KIND)
-            if four_kind is not None:
-                return four_kind
-            full_house = try_hand(cards, HandType.FULL_HOUSE)
-
-    if full_house is not None:
-        return full_house
-    if flush is not None:
-        return flush
-    if straight is not None:
-        return straight
-    if three_kind is not None:
-        return three_kind
-
-    if pair is not None:
-        two_pair = try_hand(cards, HandType.TWO_PAIR)
-        if two_pair is not None:
-            return two_pair
-        return pair
-
-    high_card = try_hand(cards, HandType.HIGH_CARD)
-    if high_card is not None:
-        return high_card
-
+    if best_score is not None:
+        return best_score
     raise "No valid hand found"
