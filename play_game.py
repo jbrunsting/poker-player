@@ -9,7 +9,7 @@ import scorer
 CARD_FORMAT_MSG = "Card format is [shdc][1-10,jqka]"
 CARDS_IN_HAND = 2
 CARDS_IN_RIVER = 5
-NUM_ITERS = 1000
+NUM_ITERS = 10000
 
 
 class GameOutcome(enum.IntEnum):
@@ -26,12 +26,23 @@ def cards_diff(cards, to_remove):
     return [c for c in cards if c not in to_remove]
 
 
-def get_deck():
-    deck = []
-    for s in range(len(card.SUIT_INDICES)):
-        for i in range(card.MIN_CARD, card.MAX_CARD + 1):
-            deck.append(card.Card(s, i))
-    return deck
+class Deck:
+    def __init__(self, to_exclude):
+        self.deck = []
+        for s in range(len(card.SUIT_INDICES)):
+            for i in range(card.MIN_CARD, card.MAX_CARD + 1):
+                exclude = False
+                for c in to_exclude:
+                    if c.suit == s and c.val == i:
+                        exclude = True
+                        break
+                if not exclude:
+                    self.deck.append(card.Card(s, i))
+
+    def pop(self):
+        i = random.randint(0, len(self.deck) - 1)
+        self.deck[i], self.deck[-1] = self.deck[-1], self.deck[i]
+        return self.deck.pop()
 
 
 def card_input():
@@ -61,10 +72,7 @@ def card_input():
         print(CARD_FORMAT_MSG)
 
 
-def simulate_game(players, hand):
-    deck = cards_diff(get_deck(), hand)
-    random.shuffle(deck)
-
+def simulate_game(players, deck, hand):
     river = [deck.pop() for i in range(CARDS_IN_RIVER)]
     player_hands = [[deck.pop() for i in range(CARDS_IN_HAND)]
                     for i in range(players - 1)]
@@ -87,7 +95,7 @@ while True:
         hand = [card_input() for i in range(CARDS_IN_HAND)]
         counts = {g: 0 for g in GameOutcome}
         for i in range(NUM_ITERS):
-            counts[simulate_game(players, hand)] += 1
+            counts[simulate_game(players, Deck(hand), hand)] += 1
         percentages = {g: c / NUM_ITERS for g, c in counts.items()}
         o_strings = {
             GameOutcome.TIE: "tie",

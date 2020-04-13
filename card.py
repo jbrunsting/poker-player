@@ -28,8 +28,6 @@ class Card:
         return self.suit == other.suit and self.val == other.val
 
     def __lt__(self, other):
-        if self.val < other.val:
-            return True
-        if self.val > other.val:
-            return False
-        return self.suit < other.suit
+        if self.val == other.val:
+            return self.suit < other.suit
+        return self.val < other.val

@@ -114,8 +114,10 @@ def find_n_kind(cards, n):
 
 
 # Returns the cards making up the hand, or None of the hand does not exist
+# CARDS MUST BE SORTED
 def find_hand(cards, hand):
-    cards.sort()
+    assert cards[0].val <= cards[1].val and cards[-2].val <= cards[-1].val, "Cards passed to find_hand must be sorted"
+
     if hand == HandType.ROYAL_FLUSH:
         # We have a royal flush iff we have a straight flush with only cards
         # >= 10
@@ -182,10 +184,47 @@ def find_hand(cards, hand):
 
 
 def score(cards):
+    cards.sort()
     assert len(cards) >= CARDS_TO_USE, "Must have {} cards to score".format(
         CARDS_TO_USE)
-    for hand in HandType:
-        hand_cards = find_hand(cards, hand)
-        if hand_cards is not None:
-            return Score(hand, hand_cards, cards)
+
+    flush = find_hand(cards, HandType.FLUSH)
+    if flush is not None:
+        s_flush = find_hand(cards, HandType.STRAIGHT_FLUSH)
+        if s_flush is not None:
+            r_flush = find_hand(cards, HandType.ROYAL_FLUSH)
+            if r_flush is not None:
+                return r_flush
+            return s_flush
+
+    straight = find_hand(cards, HandType.STRAIGHT)
+    pair = find_hand(cards, HandType.PAIR)
+    if pair is not None:
+        three_kind = find_hand(cards, HandType.THREE_KIND)
+        if three_kind is not None:
+            four_kind = find_hand(cards, HandType.FOUR_KIND)
+            if four_kind is not None:
+                return four_kind
+            full_house = find_hand(cards, HandType.FULL_HOUSE)
+            if full_house is not None:
+                return full_house
+            if flush is not None:
+                return flush
+            if straight is not None:
+                return straight
+            return three_kind
+        two_pair = find_hand(cards, HandType.TWO_PAIR)
+        if two_pair is not None:
+            return two_pair
+        return pair
+    else:
+        if flush is not None:
+            return flush
+        if straight is not None:
+            return straight
+
+    high_card = find_hand(cards, HandType.HIGH_CARD)
+    if high_card is not None:
+        return high_card
+
     raise "No valid hand found"
