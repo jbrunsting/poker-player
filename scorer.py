@@ -99,8 +99,12 @@ class Score:
         if hand_size == 5:
             return False
 
-        return not not tiebreaker_lt(self.non_hand_cards[-(5 - hand_size):],
-                                     False, other.cards, False)
+        return not not tiebreaker_lt(
+            self.non_hand_cards[-(5 - hand_size):],
+            False,
+            other.non_hand_cards[-(5 - hand_size):],
+            False,
+        )
 
 
 def find_n_kind(cards, n):
