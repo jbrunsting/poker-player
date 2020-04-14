@@ -104,6 +104,7 @@ def set_players(params):
 
 
 def set_hand(params):
+    global g_hand
     g_hand = params
     print("Set hand to {} ".format(cards_str(params)))
 
