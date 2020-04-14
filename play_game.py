@@ -11,7 +11,7 @@ import scorer
 CARD_FORMAT_MSG = "Card format is [shdc][1-10,jqka]"
 CARDS_IN_HAND = 2
 CARDS_IN_RIVER = 5
-NUM_ITERS = 25000
+NUM_ITERS = 10000
 NUM_THREADS = 10
 
 
@@ -92,9 +92,8 @@ g_river = []
 g_commands = []
 
 
-def print_river():
-    print("River is {} ".format(", ".join(
-        [str(c) for c in g_flop + g_turn + g_river])))
+def print_table():
+    print("Table is {}".format(cards_str(g_flop + g_turn + g_river)))
 
 
 def set_players(params):
@@ -112,19 +111,19 @@ def set_hand(params):
 def set_flop(params):
     global g_flop
     g_flop = params
-    print_river()
+    print_table()
 
 
 def set_turn(params):
     global g_turn
     g_turn = params
-    print_river()
+    print_table()
 
 
 def set_river(params):
     global g_river
     g_river = params
-    print_river()
+    print_table()
 
 
 def reset(params):
@@ -188,10 +187,9 @@ g_commands.append(
 g_commands.append(
     command.Command(
         "flop", [command.Param.CARD, command.Param.CARD, command.Param.CARD],
-        set_hand))
-g_commands.append(command.Command("turn", [command.Param.CARD], set_river))
-g_commands.append(
-    command.Command("river", [command.Param.CARD], make_prediction))
+        set_flop))
+g_commands.append(command.Command("turn", [command.Param.CARD], set_turn))
+g_commands.append(command.Command("river", [command.Param.CARD], set_river))
 g_commands.append(command.Command("reset", [], reset))
 g_commands.append(command.Command("predict", [], make_prediction))
 g_commands.append(command.Command("help", [], command_help))
