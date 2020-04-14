@@ -153,16 +153,14 @@ def make_prediction(params):
 
     threads = []
     for i in range(NUM_THREADS):
-        simulate_games(g_players, g_hand, table, int(NUM_ITERS / NUM_THREADS), thread_counts[i])
-#
-#        p = Process(
-#            target=simulate_games,
-#            args=(g_players, g_hand, table, int(NUM_ITERS / NUM_THREADS),
-#                  thread_counts[i]))
-#        threads.append(p)
-#        p.start()
-#    for i in range(NUM_THREADS):
-#        p.join()
+        p = Process(
+            target=simulate_games,
+            args=(g_players, g_hand, table, int(NUM_ITERS / NUM_THREADS),
+                  thread_counts[i]))
+        threads.append(p)
+        p.start()
+    for p in threads:
+        p.join()
 
     counts = {g: sum(cs[g] for cs in thread_counts) for g in GameOutcome}
 
