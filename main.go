@@ -73,7 +73,7 @@ func predict(deck *card.Deck, hand []card.Card, table []card.Card, players int) 
 }
 
 func main() {
-	players := 1
+	players := 0
 	hand := []card.Card{}
 	flop := []card.Card{}
 	turn := []card.Card{}
@@ -93,24 +93,43 @@ func main() {
 
 	setPlayers := func(params []command.Param) {
 		players = params[0].Number
+		if params[0].Number <= 0 {
+			return
+		}
 		fmt.Printf("There are %d players\n", players)
 	}
 	setHand := func(params []command.Param) {
+		if players == 0 {
+			fmt.Printf("Must set the number of players before your hand\n")
+			return
+		}
 		hand = []card.Card{}
 		hand = addCardParams(hand, params)
 		fmt.Printf("Hand is %s\n", card.CardsStr(hand))
 	}
 	setFlop := func(params []command.Param) {
+		if len(hand) == 0 {
+			fmt.Printf("Must set your hand before the flop\n")
+			return
+		}
 		flop = []card.Card{}
 		flop = addCardParams(flop, params)
 		printTable()
 	}
 	setTurn := func(params []command.Param) {
+		if len(flop) == 0 {
+			fmt.Printf("Must set the flop before the turn\n")
+			return
+		}
 		turn = []card.Card{}
 		turn = addCardParams(turn, params)
 		printTable()
 	}
 	setRiver := func(params []command.Param) {
+		if len(turn) == 0 {
+			fmt.Printf("Must set the turn before the river\n")
+			return
+		}
 		river = []card.Card{}
 		river = addCardParams(river, params)
 		printTable()
