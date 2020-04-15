@@ -2,6 +2,8 @@ package card
 
 import (
 	"fmt"
+	"math/big"
+	"crypto/rand"
 	"strings"
 )
 
@@ -44,4 +46,60 @@ func (c Card) String() string {
 
 func (c *Card) Rank() int {
 	return NumSuits*MaxVal + c.Suit
+}
+
+type Deck struct {
+	cards  []Card
+	length int
+}
+
+func (d *Deck) Init() {
+	d.cards = []Card{}
+	for s := 0; s < NumSuits; s++ {
+		for i := MinVal; i <= MaxVal; i++ {
+			d.cards = append(d.cards, Card{s, i})
+		}
+	}
+	d.length = len(d.cards)
+}
+
+func swap(arr []Card, a int, b int) {
+	arr[a], arr[b] = arr[b], arr[a]
+}
+
+func (d *Deck) Remove(cards []Card) {
+	for _, toRemove := range cards {
+		for i := 0; i < d.length; i++ {
+			if toRemove == d.cards[i] {
+				d.length -= 1
+				swap(d.cards, i, d.length)
+				break
+			}
+		}
+	}
+}
+
+func (d *Deck) Reshuffle() {
+	d.length = len(d.cards)
+}
+
+func (d *Deck) Pop() Card {
+	d.length -= 1
+	if d.length < 0 {
+		panic("Deck empty")
+	}
+	nBig, err := rand.Int(rand.Reader, big.NewInt(int64(d.length)))
+	if err != nil {
+		panic(err)
+	}
+	i := int(nBig.Int64())
+	swap(d.cards, i, d.length)
+	return d.cards[d.length]
+}
+
+func PadWithDeck(cards []Card, desiredLen int, d *Deck) []Card {
+	for len(cards) < desiredLen {
+		cards = append(cards, d.Pop())
+	}
+	return cards
 }

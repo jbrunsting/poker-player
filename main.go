@@ -9,11 +9,35 @@ import (
 	"github.com/jbrunsting/poker-player/command"
 )
 
+const (
+	handSize        = 2
+	tableSize       = 5
+	predictionIters = 100
+)
+
 func addCardParams(cards []card.Card, params []command.Param) []card.Card {
 	for _, p := range params {
 		cards = append(cards, *p.Card)
 	}
 	return cards
+}
+
+func predict(deck *card.Deck, hand []card.Card, table []card.Card, players int) {
+	for i := 0; i < predictionIters; i++ {
+		deck.Reshuffle()
+        paddedHand := card.PadWithDeck(hand, handSize, deck)
+        paddedTable := card.PadWithDeck(table, tableSize, deck)
+		playerHands := make([][]card.Card, players-1)
+		for i := 0; i < players-1; i++ {
+			playerHands[i] = card.PadWithDeck([]card.Card{}, handSize, deck)
+		}
+
+		// TODO: Call out to scorer
+		fmt.Printf("Hand: %s, table: %s\n", card.CardsStr(paddedHand), card.CardsStr(paddedTable))
+		for i := 0; i < players-1; i++ {
+			fmt.Printf("Player hand: %s\n", card.CardsStr(playerHands[i]))
+		}
+	}
 }
 
 func main() {
@@ -69,6 +93,12 @@ func main() {
 	}
 	makePrediction := func(params []command.Param) {
 		fmt.Println("Making prediction")
+		table := getTable()
+		deck := card.Deck{}
+		deck.Init()
+		deck.Remove(hand)
+		deck.Remove(table)
+		predict(&deck, hand, table, players)
 	}
 	commandHelp := func(params []command.Param) {
 		fmt.Printf("Commands are %s\n", commands)
