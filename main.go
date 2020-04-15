@@ -21,7 +21,7 @@ const (
 const (
 	handSize        = 2
 	tableSize       = 5
-	predictionIters = 25000
+	predictionIters = 50000
 )
 
 func addCardParams(cards []card.Card, params []command.Param) []card.Card {
@@ -66,7 +66,10 @@ func predict(deck *card.Deck, hand []card.Card, table []card.Card, players int) 
 		outcomePercents[i] = float64(outcomeCounts[i]) / float64(predictionIters)
 	}
 
-	fmt.Printf("Outcome precents are %v\n", outcomePercents)
+	fmt.Printf("Odds for hand [%v] with table [%v] and %d players:\n",
+		card.CardsStr(hand), card.CardsStr(table), players)
+	fmt.Printf("    Win:  %f\n    Loss: %f\n    Tie:  %f\n",
+		outcomePercents[win], outcomePercents[loss], outcomePercents[tie])
 }
 
 func main() {

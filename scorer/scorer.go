@@ -1,7 +1,6 @@
 package scorer
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/jbrunsting/poker-player/card"
@@ -317,13 +316,6 @@ func _findHand(cards []card.Card, hand HandType) []card.Card {
 }
 
 func GetScore(cards []card.Card) Score {
-	for i1, o1 := range cards {
-		for i2, o2 := range cards {
-			if i1 != i2 && o1 == o2 {
-				panic(fmt.Sprintf("DUPLICATE for cards %v, card %s at %d, %d", cards, o1, i1, i2))
-			}
-		}
-	}
 	for i := maxHand + 1; i >= minHand; i-- {
 		handType := HandType(i)
 		handCards := findHand(cards, handType)

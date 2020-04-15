@@ -22,6 +22,9 @@ const (
 )
 
 func CardsStr(cards []Card) string {
+	if len(cards) == 0 {
+		return ""
+	}
 	cardStrs := []string{}
 	for _, c := range cards {
 		cardStrs = append(cardStrs, c.String())
