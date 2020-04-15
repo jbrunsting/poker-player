@@ -7,6 +7,15 @@ import (
 
 	"github.com/jbrunsting/poker-player/card"
 	"github.com/jbrunsting/poker-player/command"
+	"github.com/jbrunsting/poker-player/scorer"
+)
+
+type gameOutcome int
+
+const (
+	win = iota
+	loss
+	tie
 )
 
 const (
@@ -25,18 +34,30 @@ func addCardParams(cards []card.Card, params []command.Param) []card.Card {
 func predict(deck *card.Deck, hand []card.Card, table []card.Card, players int) {
 	for i := 0; i < predictionIters; i++ {
 		deck.Reshuffle()
-        paddedHand := card.PadWithDeck(hand, handSize, deck)
-        paddedTable := card.PadWithDeck(table, tableSize, deck)
+		paddedHand := card.PadWithDeck(hand, handSize, deck)
+		paddedTable := card.PadWithDeck(table, tableSize, deck)
 		playerHands := make([][]card.Card, players-1)
 		for i := 0; i < players-1; i++ {
 			playerHands[i] = card.PadWithDeck([]card.Card{}, handSize, deck)
 		}
 
-		// TODO: Call out to scorer
 		fmt.Printf("Hand: %s, table: %s\n", card.CardsStr(paddedHand), card.CardsStr(paddedTable))
 		for i := 0; i < players-1; i++ {
 			fmt.Printf("Player hand: %s\n", card.CardsStr(playerHands[i]))
 		}
+
+		outcome := win
+		handScore := scorer.GetScore(paddedHand)
+		for _, ph := range playerHands {
+			phScore := scorer.GetScore(ph)
+			if handScore.LessThan(&phScore) {
+				outcome = loss
+				break
+			} else if handScore.Equals(&phScore) {
+				outcome = tie
+			}
+		}
+		fmt.Printf("Outcome is %v\n", outcome)
 	}
 }
 

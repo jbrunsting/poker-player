@@ -15,6 +15,8 @@ type Card struct {
 const (
 	MinVal      = 2
 	MaxVal      = 14
+    AceVal      = 14
+    AceLowVal   = 1
 	NumSuits    = 4
 	SuitIndices = "shdc"
 )
@@ -102,4 +104,13 @@ func PadWithDeck(cards []Card, desiredLen int, d *Deck) []Card {
 		cards = append(cards, d.Pop())
 	}
 	return cards
+}
+
+func HasCard(cards []Card, val int) bool {
+    for _, c := range cards {
+        if c.Val == val {
+            return true
+        }
+    }
+    return false
 }
