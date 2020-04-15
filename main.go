@@ -30,7 +30,7 @@ func main() {
 	}
 	printTable := func() {
 		table := getTable()
-		fmt.Printf("Table is %s\n", table)
+		fmt.Printf("Table is %s\n", card.CardsStr(table))
 	}
 
 	commands := make([]command.Command, 0)
@@ -42,6 +42,7 @@ func main() {
 	setHand := func(params []command.Param) {
 		hand = []card.Card{}
 		hand = addCardParams(hand, params)
+		fmt.Printf("Hand is %s\n", card.CardsStr(hand))
 	}
 	setFlop := func(params []command.Param) {
 		flop = []card.Card{}
@@ -94,7 +95,7 @@ func main() {
 		"turn", []command.ParamType{command.CardParam}, setTurn,
 	})
 	commands = append(commands, command.Command{
-		"river", []command.ParamType{command.CardParam, command.CardParam, command.CardParam}, setRiver,
+		"river", []command.ParamType{command.CardParam}, setRiver,
 	})
 	commands = append(commands, command.Command{
 		"reset", []command.ParamType{}, reset,

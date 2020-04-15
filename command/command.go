@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -28,6 +29,37 @@ type Command struct {
 	Fn         func([]Param)
 }
 
+func cardInput(input string) (card.Card, error) {
+	c := card.Card{}
+	if len(input) == 2 || len(input) == 3 {
+		c.Suit = strings.IndexByte(card.SuitIndices, input[len(input)-1])
+		if !(0 <= c.Suit && c.Suit <= card.NumSuits) {
+			return c, fmt.Errorf("Card suit out of range")
+		}
+
+		valInput := input[:len(input)-1]
+		if valInput == "j" {
+			c.Val = 11
+		} else if valInput == "q" {
+			c.Val = 12
+		} else if valInput == "k" {
+			c.Val = 13
+		} else if valInput == "a" {
+			c.Val = 14
+		} else {
+			val, err := strconv.Atoi(valInput)
+			if err != nil {
+				return c, err
+			}
+			if !(card.MinVal <= val && val <= card.MaxVal) {
+				return c, fmt.Errorf("Card value out of range")
+			}
+			c.Val = val
+		}
+	}
+	return c, nil
+}
+
 func (c Command) String() string {
 	return c.Name
 }
@@ -48,12 +80,11 @@ func (c *Command) Parse(input string) bool {
 		p := Param{}
 		p.Kind = kind
 		if kind == CardParam {
-			p.Card = &card.Card{}
-//			c = card_input(components[0])
-//			if c == nil {
-//				break
-//			}
-//			results = append(results, c)
+			c, err := cardInput(components[0])
+			if err != nil {
+				return false
+			}
+			p.Card = &c
 		} else if kind == StringParam {
 			p.String = components[0]
 		} else if kind == NumberParam {
