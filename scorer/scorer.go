@@ -44,6 +44,7 @@ func min(a, b int) int {
 	return b
 }
 
+// Cards must be sorted in descending order
 func tiebreaker(cardsA []card.Card, aAceHi bool, cardsB []card.Card, bAceHi bool) tieResult {
 	cards := [][]card.Card{cardsA, cardsB}
 	ace_hi := []bool{aAceHi, bAceHi}
@@ -65,7 +66,6 @@ func tiebreaker(cardsA []card.Card, aAceHi bool, cardsB []card.Card, bAceHi bool
 			return lt
 		} else if rankings[0][i] > rankings[1][i] {
 			return gt
-
 		}
 	}
 
@@ -317,14 +317,13 @@ func _findHand(cards []card.Card, hand HandType) []card.Card {
 }
 
 func GetScore(cards []card.Card) Score {
-	for ia, ca := range cards {
-		for ib, cb := range cards {
-			if ca == cb && ia != ib {
-				panic("DUPLICATE")
+	for i1, o1 := range cards {
+		for i2, o2 := range cards {
+			if i1 != i2 && o1 == o2 {
+				panic(fmt.Sprintf("DUPLICATE for cards %v, card %s at %d, %d", cards, o1, i1, i2))
 			}
 		}
 	}
-	fmt.Printf("Getting score for %s\n", cards)
 	for i := maxHand + 1; i >= minHand; i-- {
 		handType := HandType(i)
 		handCards := findHand(cards, handType)
@@ -337,9 +336,8 @@ func GetScore(cards []card.Card) Score {
 			return true
 		})
 		if len(handCards) != 0 {
-			fmt.Printf("Score is %s for cards %s side cards %s\n", handTypeToString(handType), handCards, sideCards)
 			return Score{handType, handCards, sideCards[:cardsToUse-len(handCards)]}
 		}
 	}
-	panic("Could not find a score for the cards")
+	panic("No score found")
 }

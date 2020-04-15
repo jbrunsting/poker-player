@@ -21,7 +21,7 @@ const (
 const (
 	handSize        = 2
 	tableSize       = 5
-	predictionIters = 100
+	predictionIters = 25000
 )
 
 func addCardParams(cards []card.Card, params []command.Param) []card.Card {
@@ -32,6 +32,7 @@ func addCardParams(cards []card.Card, params []command.Param) []card.Card {
 }
 
 func predict(deck *card.Deck, hand []card.Card, table []card.Card, players int) {
+	outcomeCounts := make([]int, 3)
 	for i := 0; i < predictionIters; i++ {
 		deck.Reshuffle()
 		paddedHand := card.PadWithDeck(hand, handSize, deck)
@@ -40,17 +41,16 @@ func predict(deck *card.Deck, hand []card.Card, table []card.Card, players int) 
 		for i := 0; i < players-1; i++ {
 			playerHands[i] = card.PadWithDeck([]card.Card{}, handSize, deck)
 		}
-
-		//		fmt.Printf("Hand: %s, table: %s\n", card.CardsStr(paddedHand), card.CardsStr(paddedTable))
-		//		for i := 0; i < players-1; i++ {
-		//			fmt.Printf("Player hand: %s\n", card.CardsStr(playerHands[i]))
-		//		}
-
-		fmt.Printf("Hand: %s, table: %s\n", card.CardsStr(paddedHand), card.CardsStr(paddedTable))
 		outcome := win
-		handScore := scorer.GetScore(append(paddedTable, paddedHand...))
+		curCards := []card.Card{}
+		curCards = append(curCards, paddedTable...)
+		curCards = append(curCards, paddedHand...)
+		handScore := scorer.GetScore(curCards)
 		for _, ph := range playerHands {
-			phScore := scorer.GetScore(append(paddedTable, ph...))
+			curCards = []card.Card{}
+			curCards = append(curCards, paddedTable...)
+			curCards = append(curCards, ph...)
+			phScore := scorer.GetScore(curCards)
 			if handScore.LessThan(&phScore) {
 				outcome = loss
 				break
@@ -58,8 +58,15 @@ func predict(deck *card.Deck, hand []card.Card, table []card.Card, players int) 
 				outcome = tie
 			}
 		}
-		fmt.Printf("Outcome is %v\n", outcome)
+
+		outcomeCounts[outcome] += 1
 	}
+	outcomePercents := make([]float64, 3)
+	for i := 0; i < 3; i++ {
+		outcomePercents[i] = float64(outcomeCounts[i]) / float64(predictionIters)
+	}
+
+	fmt.Printf("Outcome precents are %v\n", outcomePercents)
 }
 
 func main() {
