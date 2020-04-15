@@ -41,15 +41,16 @@ func predict(deck *card.Deck, hand []card.Card, table []card.Card, players int) 
 			playerHands[i] = card.PadWithDeck([]card.Card{}, handSize, deck)
 		}
 
-		fmt.Printf("Hand: %s, table: %s\n", card.CardsStr(paddedHand), card.CardsStr(paddedTable))
-		for i := 0; i < players-1; i++ {
-			fmt.Printf("Player hand: %s\n", card.CardsStr(playerHands[i]))
-		}
+		//		fmt.Printf("Hand: %s, table: %s\n", card.CardsStr(paddedHand), card.CardsStr(paddedTable))
+		//		for i := 0; i < players-1; i++ {
+		//			fmt.Printf("Player hand: %s\n", card.CardsStr(playerHands[i]))
+		//		}
 
+		fmt.Printf("Hand: %s, table: %s\n", card.CardsStr(paddedHand), card.CardsStr(paddedTable))
 		outcome := win
-		handScore := scorer.GetScore(paddedHand)
+		handScore := scorer.GetScore(append(paddedTable, paddedHand...))
 		for _, ph := range playerHands {
-			phScore := scorer.GetScore(ph)
+			phScore := scorer.GetScore(append(paddedTable, ph...))
 			if handScore.LessThan(&phScore) {
 				outcome = loss
 				break

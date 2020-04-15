@@ -1,9 +1,9 @@
 package card
 
 import (
+	"crypto/rand"
 	"fmt"
 	"math/big"
-	"crypto/rand"
 	"strings"
 )
 
@@ -15,8 +15,8 @@ type Card struct {
 const (
 	MinVal      = 2
 	MaxVal      = 14
-    AceVal      = 14
-    AceLowVal   = 1
+	AceVal      = 14
+	AceLowVal   = 1
 	NumSuits    = 4
 	SuitIndices = "shdc"
 )
@@ -69,12 +69,14 @@ func swap(arr []Card, a int, b int) {
 	arr[a], arr[b] = arr[b], arr[a]
 }
 
+// Removes the card permenantly, doesn't come back on reshuffle
 func (d *Deck) Remove(cards []Card) {
 	for _, toRemove := range cards {
 		for i := 0; i < d.length; i++ {
 			if toRemove == d.cards[i] {
 				d.length -= 1
 				swap(d.cards, i, d.length)
+				d.cards = d.cards[:d.length]
 				break
 			}
 		}
@@ -107,10 +109,10 @@ func PadWithDeck(cards []Card, desiredLen int, d *Deck) []Card {
 }
 
 func HasCard(cards []Card, val int) bool {
-    for _, c := range cards {
-        if c.Val == val {
-            return true
-        }
-    }
-    return false
+	for _, c := range cards {
+		if c.Val == val {
+			return true
+		}
+	}
+	return false
 }
