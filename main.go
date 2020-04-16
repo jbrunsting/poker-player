@@ -21,7 +21,7 @@ const (
 const (
 	handSize        = 2
 	tableSize       = 5
-	predictionIters = 50000
+	predictionIters = 25000
 )
 
 func addCardParams(cards []card.Card, params []command.Param) []card.Card {
@@ -91,6 +91,25 @@ func main() {
 
 	commands := make([]command.Command, 0)
 
+	resetCards := func() {
+		hand = []card.Card{}
+		flop = []card.Card{}
+		turn = []card.Card{}
+		river = []card.Card{}
+	}
+	makePrediction := func() {
+		if players <= 0 {
+			fmt.Println("Must have at least one player")
+			return
+		}
+		fmt.Println("Making prediction")
+		table := getTable()
+		deck := card.Deck{}
+		deck.Init()
+		deck.Remove(hand)
+		deck.Remove(table)
+		predict(&deck, hand, table, players)
+	}
 	setPlayers := func(params []command.Param) {
 		players = params[0].Number
 		if params[0].Number <= 0 {
@@ -103,9 +122,14 @@ func main() {
 			fmt.Printf("Must set the number of players before your hand\n")
 			return
 		}
+		if len(flop) != 0 || len(turn) != 0 || len(river) != 0 {
+			fmt.Printf("Resetting cards for new hand")
+			resetCards()
+		}
 		hand = []card.Card{}
 		hand = addCardParams(hand, params)
 		fmt.Printf("Hand is %s\n", card.CardsStr(hand))
+		makePrediction()
 	}
 	setFlop := func(params []command.Param) {
 		if len(hand) == 0 {
@@ -115,6 +139,7 @@ func main() {
 		flop = []card.Card{}
 		flop = addCardParams(flop, params)
 		printTable()
+		makePrediction()
 	}
 	setTurn := func(params []command.Param) {
 		if len(flop) == 0 {
@@ -124,6 +149,7 @@ func main() {
 		turn = []card.Card{}
 		turn = addCardParams(turn, params)
 		printTable()
+		makePrediction()
 	}
 	setRiver := func(params []command.Param) {
 		if len(turn) == 0 {
@@ -133,23 +159,11 @@ func main() {
 		river = []card.Card{}
 		river = addCardParams(river, params)
 		printTable()
+		makePrediction()
 	}
-	reset := func(params []command.Param) {
-		players = 1
-		hand = []card.Card{}
-		flop = []card.Card{}
-		turn = []card.Card{}
-		river = []card.Card{}
-		fmt.Println("Reset state")
-	}
-	makePrediction := func(params []command.Param) {
-		fmt.Println("Making prediction")
-		table := getTable()
-		deck := card.Deck{}
-		deck.Init()
-		deck.Remove(hand)
-		deck.Remove(table)
-		predict(&deck, hand, table, players)
+	reset := func() {
+		resetCards()
+		fmt.Println("Reset cards")
 	}
 	commandHelp := func(params []command.Param) {
 		fmt.Printf("Commands are %s\n", commands)
@@ -179,10 +193,10 @@ func main() {
 		"river", []command.ParamType{command.CardParam}, setRiver,
 	})
 	commands = append(commands, command.Command{
-		"reset", []command.ParamType{}, reset,
+		"reset", []command.ParamType{}, func(params []command.Param) { reset() },
 	})
 	commands = append(commands, command.Command{
-		"predict", []command.ParamType{}, makePrediction,
+		"predict", []command.ParamType{}, func(params []command.Param) { makePrediction() },
 	})
 	commands = append(commands, command.Command{
 		"help", []command.ParamType{}, commandHelp,
