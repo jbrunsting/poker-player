@@ -117,6 +117,18 @@ func main() {
 		}
 		fmt.Printf("There are %d players\n", players)
 	}
+	addName := func(params []command.Param) {
+		fmt.Printf("TODO: Create new player profile with name %s\n", params[0].String)
+	}
+	removeName := func(params []command.Param) {
+		fmt.Printf("TODO: Remove player profile with name %s\n", params[0].String)
+	}
+	foldName := func(params []command.Param) {
+		fmt.Printf("TODO: Mark player %s as folded\n", params[0].String)
+	}
+	wonName := func(params []command.Param) {
+		fmt.Printf("TODO: Mark player %s as won\n", params[0].String)
+	}
 	setHand := func(params []command.Param) {
 		if players == 0 {
 			fmt.Printf("Must set the number of players before your hand\n")
@@ -173,6 +185,26 @@ func main() {
 		"players",
 		[]command.ParamType{command.NumberParam},
 		setPlayers,
+	})
+	commands = append(commands, command.Command{
+		"aname",
+		[]command.ParamType{command.StringParam},
+		addName,
+	})
+	commands = append(commands, command.Command{
+		"rname",
+		[]command.ParamType{command.StringParam},
+		removeName,
+	})
+	commands = append(commands, command.Command{
+		"folded",
+		[]command.ParamType{command.StringParam},
+		foldName,
+	})
+	commands = append(commands, command.Command{
+		"won",
+		[]command.ParamType{command.StringParam},
+		wonName,
 	})
 	commands = append(commands, command.Command{
 		"hand",
