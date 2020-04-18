@@ -7,6 +7,7 @@ import (
 
 	"github.com/jbrunsting/poker-player/card"
 	"github.com/jbrunsting/poker-player/command"
+	"github.com/jbrunsting/poker-player/player"
 	"github.com/jbrunsting/poker-player/scorer"
 )
 
@@ -31,14 +32,14 @@ func addCardParams(cards []card.Card, params []command.Param) []card.Card {
 	return cards
 }
 
-func predict(deck *card.Deck, hand []card.Card, table []card.Card, players int) {
+func predict(deck *card.Deck, hand []card.Card, table []card.Card, numPlayers int) {
 	outcomeCounts := make([]int, 3)
 	for i := 0; i < predictionIters; i++ {
 		deck.Reshuffle()
 		paddedHand := card.PadWithDeck(hand, handSize, deck)
 		paddedTable := card.PadWithDeck(table, tableSize, deck)
-		playerHands := make([][]card.Card, players-1)
-		for i := 0; i < players-1; i++ {
+		playerHands := make([][]card.Card, numPlayers-1)
+		for i := 0; i < numPlayers-1; i++ {
 			playerHands[i] = card.PadWithDeck([]card.Card{}, handSize, deck)
 		}
 		outcome := win
@@ -67,13 +68,14 @@ func predict(deck *card.Deck, hand []card.Card, table []card.Card, players int) 
 	}
 
 	fmt.Printf("Odds for hand [%v] with table [%v] and %d players:\n",
-		card.CardsStr(hand), card.CardsStr(table), players)
+		card.CardsStr(hand), card.CardsStr(table), numPlayers)
 	fmt.Printf("    Win:  %f\n    Loss: %f\n    Tie:  %f\n",
 		outcomePercents[win], outcomePercents[loss], outcomePercents[tie])
 }
 
 func main() {
-	players := 0
+	numPlayers := 0
+	players := make(map[string]*player.Player)
 	hand := []card.Card{}
 	flop := []card.Card{}
 	turn := []card.Card{}
@@ -83,6 +85,16 @@ func main() {
 		table := append(flop, turn...)
 		table = append(table, river...)
 		return table
+	}
+	getRound := func() player.GameRound {
+		if len(flop) == 0 {
+			return player.RoundPreFlop
+		} else if len(turn) == 0 {
+			return player.RoundFlop
+		} else if len(river) == 0 {
+			return player.RoundTurn
+		}
+		return player.RoundRiver
 	}
 	printTable := func() {
 		table := getTable()
@@ -98,7 +110,7 @@ func main() {
 		river = []card.Card{}
 	}
 	makePrediction := func() {
-		if players <= 0 {
+		if numPlayers <= 0 {
 			fmt.Println("Must have at least one player")
 			return
 		}
@@ -108,29 +120,33 @@ func main() {
 		deck.Init()
 		deck.Remove(hand)
 		deck.Remove(table)
-		predict(&deck, hand, table, players)
+		predict(&deck, hand, table, numPlayers)
 	}
 	setPlayers := func(params []command.Param) {
-		players = params[0].Number
+		numPlayers = params[0].Number
 		if params[0].Number <= 0 {
 			return
 		}
-		fmt.Printf("There are %d players\n", players)
+		fmt.Printf("There are %d players\n", numPlayers)
 	}
 	addName := func(params []command.Param) {
-		fmt.Printf("TODO: Create new player profile with name %s\n", params[0].String)
+		name := params[0].String
+		p := player.Player{}
+		p.Init(name)
+		players[name] = &p
 	}
 	removeName := func(params []command.Param) {
-		fmt.Printf("TODO: Remove player profile with name %s\n", params[0].String)
+		delete(players, params[0].String)
 	}
 	foldName := func(params []command.Param) {
-		fmt.Printf("TODO: Mark player %s as folded\n", params[0].String)
+		// TODO: Do prefix matching
+		players[params[0].String].FoldsPerRound[getRound()] += 1
 	}
 	wonName := func(params []command.Param) {
-		fmt.Printf("TODO: Mark player %s as won\n", params[0].String)
+		players[params[0].String].Wins += 1
 	}
 	setHand := func(params []command.Param) {
-		if players == 0 {
+		if numPlayers == 0 {
 			fmt.Printf("Must set the number of players before your hand\n")
 			return
 		}
