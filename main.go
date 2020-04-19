@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/jbrunsting/poker-player/card"
 	"github.com/jbrunsting/poker-player/command"
@@ -134,16 +135,63 @@ func main() {
 		p := player.Player{}
 		p.Init(name)
 		players[name] = &p
+		fmt.Printf("Added player %s\n", name)
 	}
 	removeName := func(params []command.Param) {
-		delete(players, params[0].String)
+		name := params[0].String
+		delete(players, name)
+		fmt.Printf("Removed player %s\n", name)
+	}
+	findMatchingPlayer := func(providedName string) string {
+		match := ""
+		for k := range players {
+			if len(k) < len(providedName) {
+				continue
+			}
+			if k == providedName {
+				return k
+			}
+			if strings.HasPrefix(k, providedName) {
+				if match != "" {
+					fmt.Printf("Ambiguous player name\n")
+					return ""
+				}
+				match = k
+			}
+		}
+		if match == "" {
+			fmt.Printf("Matching player not found\n")
+			return ""
+		}
+		return match
 	}
 	foldName := func(params []command.Param) {
-		// TODO: Do prefix matching
-		players[params[0].String].FoldsPerRound[getRound()] += 1
+		matchingPlayer := findMatchingPlayer(params[0].String)
+		if matchingPlayer != "" {
+			players[matchingPlayer].FoldsPerRound[getRound()] += 1
+			fmt.Printf("Marked player '%s' as folded in round %d\n", matchingPlayer, getRound())
+		}
 	}
 	wonName := func(params []command.Param) {
-		players[params[0].String].Wins += 1
+		matchingPlayer := findMatchingPlayer(params[0].String)
+		if matchingPlayer != "" {
+			players[matchingPlayer].Wins += 1
+			fmt.Printf("Marked player '%s' as won\n", matchingPlayer)
+		}
+	}
+	unfoldName := func(params []command.Param) {
+		matchingPlayer := findMatchingPlayer(params[0].String)
+		if matchingPlayer != "" {
+			players[matchingPlayer].FoldsPerRound[getRound()] -= 1
+			fmt.Printf("Unmarked player '%s' as folded in round %d\n", matchingPlayer, getRound())
+		}
+	}
+	unwonName := func(params []command.Param) {
+		matchingPlayer := findMatchingPlayer(params[0].String)
+		if matchingPlayer != "" {
+			players[matchingPlayer].Wins -= 1
+			fmt.Printf("Unmarked player '%s' as won\n", matchingPlayer)
+		}
 	}
 	setHand := func(params []command.Param) {
 		if numPlayers == 0 {
@@ -213,7 +261,7 @@ func main() {
 		removeName,
 	})
 	commands = append(commands, command.Command{
-		"folded",
+		"fold",
 		[]command.ParamType{command.StringParam},
 		foldName,
 	})
@@ -221,6 +269,16 @@ func main() {
 		"won",
 		[]command.ParamType{command.StringParam},
 		wonName,
+	})
+	commands = append(commands, command.Command{
+		"unfold",
+		[]command.ParamType{command.StringParam},
+		unfoldName,
+	})
+	commands = append(commands, command.Command{
+		"unwon",
+		[]command.ParamType{command.StringParam},
+		unwonName,
 	})
 	commands = append(commands, command.Command{
 		"hand",
