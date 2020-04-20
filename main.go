@@ -33,7 +33,13 @@ func addCardParams(cards []card.Card, params []command.Param) []card.Card {
 	return cards
 }
 
-func predict(deck *card.Deck, hand []card.Card, table []card.Card, numPlayers int) {
+type predictionResult struct {
+	WinPercent  float64
+	LossPercent float64
+	TiePercent  float64
+}
+
+func predict(deck *card.Deck, hand []card.Card, table []card.Card, numPlayers int) predictionResult {
 	outcomeCounts := make([]int, 3)
 	for i := 0; i < predictionIters; i++ {
 		deck.Reshuffle()
@@ -68,10 +74,26 @@ func predict(deck *card.Deck, hand []card.Card, table []card.Card, numPlayers in
 		outcomePercents[i] = float64(outcomeCounts[i]) / float64(predictionIters)
 	}
 
+	return predictionResult{
+		outcomePercents[win], outcomePercents[loss], outcomePercents[tie],
+	}
+}
+
+func outputPredictionInfo(hand []card.Card, table []card.Card, numPlayers int) {
+	deck := card.Deck{}
+	deck.Init()
+	deck.Remove(hand)
+	deck.Remove(table)
+	predictions := predict(&deck, hand, table, numPlayers)
 	fmt.Printf("Odds for hand [%v] with table [%v] and %d players:\n",
 		card.CardsStr(hand), card.CardsStr(table), numPlayers)
 	fmt.Printf("    Win:  %f\n    Loss: %f\n    Tie:  %f\n",
-		outcomePercents[win], outcomePercents[loss], outcomePercents[tie])
+		predictions.WinPercent, predictions.LossPercent, predictions.TiePercent)
+
+	twoPlayerPredictions := predict(&deck, hand, table, 2)
+	fmt.Printf("Two player win percent is %f, tie percent is %f\n",
+		twoPlayerPredictions.WinPercent, twoPlayerPredictions.TiePercent,
+	)
 }
 
 func main() {
@@ -116,12 +138,7 @@ func main() {
 			return
 		}
 		fmt.Println("Making prediction")
-		table := getTable()
-		deck := card.Deck{}
-		deck.Init()
-		deck.Remove(hand)
-		deck.Remove(table)
-		predict(&deck, hand, table, numPlayers)
+		outputPredictionInfo(hand, getTable(), numPlayers)
 	}
 	setPlayers := func(params []command.Param) {
 		numPlayers = params[0].Number
@@ -179,6 +196,13 @@ func main() {
 			fmt.Printf("Marked player '%s' as won\n", matchingPlayer)
 		}
 	}
+	lostName := func(params []command.Param) {
+		matchingPlayer := findMatchingPlayer(params[0].String)
+		if matchingPlayer != "" {
+			players[matchingPlayer].Losses += 1
+			fmt.Printf("Marked player '%s' as lost\n", matchingPlayer)
+		}
+	}
 	unfoldName := func(params []command.Param) {
 		matchingPlayer := findMatchingPlayer(params[0].String)
 		if matchingPlayer != "" {
@@ -191,6 +215,13 @@ func main() {
 		if matchingPlayer != "" {
 			players[matchingPlayer].Wins -= 1
 			fmt.Printf("Unmarked player '%s' as won\n", matchingPlayer)
+		}
+	}
+	unlostName := func(params []command.Param) {
+		matchingPlayer := findMatchingPlayer(params[0].String)
+		if matchingPlayer != "" {
+			players[matchingPlayer].Losses -= 1
+			fmt.Printf("Unmarked player '%s' as lost\n", matchingPlayer)
 		}
 	}
 	setHand := func(params []command.Param) {
@@ -271,6 +302,11 @@ func main() {
 		wonName,
 	})
 	commands = append(commands, command.Command{
+		"lost",
+		[]command.ParamType{command.StringParam},
+		lostName,
+	})
+	commands = append(commands, command.Command{
 		"unfold",
 		[]command.ParamType{command.StringParam},
 		unfoldName,
@@ -279,6 +315,11 @@ func main() {
 		"unwon",
 		[]command.ParamType{command.StringParam},
 		unwonName,
+	})
+	commands = append(commands, command.Command{
+		"unlost",
+		[]command.ParamType{command.StringParam},
+		unlostName,
 	})
 	commands = append(commands, command.Command{
 		"hand",
